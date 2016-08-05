@@ -12,17 +12,51 @@ From the data provided, can we infer possible factors related to a pasenger's su
 
 ## Data Processing
 
+### Prepare Python
+Load the libraries and set plot parameters
+
+
+```python
+# load libraries and set plot parameters
+import numpy as np # import numpy
+import pandas as pd # import pandas
+#import PrettyTable as pt
+
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
+import seaborn as sns
+
+%matplotlib inline
+
+from IPython.display import set_matplotlib_formats
+set_matplotlib_formats('pdf', 'png')
+plt.rcParams['savefig.dpi'] = 75
+
+plt.rcParams['figure.autolayout'] = False
+plt.rcParams['figure.figsize'] = 10, 6
+plt.rcParams['axes.labelsize'] = 18
+plt.rcParams['axes.titlesize'] = 20
+plt.rcParams['font.size'] = 16
+plt.rcParams['lines.linewidth'] = 2.0
+plt.rcParams['lines.markersize'] = 8
+plt.rcParams['legend.fontsize'] = 14
+
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = "serif"
+plt.rcParams['font.serif'] = "cm"
+plt.rcParams['text.latex.preamble'] = \
+    "\usepackage{subdepth}, \usepackage{type1cm}"
+```
+
+### The Data
 The data contains 891 entries and 12 columns as mentioned above. From the information below, it should be noted that the age, cabin and port of embarkation columns don't report the correct number of entries. This is because these information are not supplied or missing for some of the passengers.
 
 
 ```python
-import pandas as pd # import pandas
-import numpy as np # import numpy
-
 # read the predowloaded csv
-titanic_data = pd.read_csv("titanic_data.csv")
+titanicData = pd.read_csv("titanic_data.csv")
 # print information about the dataframe
-titanic_data.info()
+titanicData.info()
 ```
 
     <class 'pandas.core.frame.DataFrame'>
@@ -44,14 +78,14 @@ titanic_data.info()
     memory usage: 66.2+ KB
     
 
-### Subset of the dataset
+### Subset
 The passenger ID will be used to identify a passenger. The independent variables in this case are sex, age and passenger class. The passenger's survival is the dependent variable to be correlated to these variables. Based on these information, other columns from the dataset are dropped.
 
 
 ```python
 # select the columns needed for the analysis
-passengers = titanic_data[['PassengerId', 'Survived', \
-                           'Pclass', 'Sex', 'Age']]
+columNames = ['PassengerId', 'Survived', 'Pclass', 'Sex', 'Age']
+passengers = titanicData[columNames]
 ```
 
 ### Age group
@@ -59,17 +93,11 @@ The age distribution of the passengers are shown below. There is a wide range of
 
 
 ```python
-# import the required modules
-%matplotlib inline
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 # plot the age distribution using histogram
-plt.xlabel('Age', fontsize=14)
-plt.ylabel('',fontsize=14)
-plt.title('Distribution of Age', fontsize=14)
-passengers['Age'].plot(kind='hist',x='Age',bins=40, \
-                       figsize=(8,4), fontsize=12)
+plt.hist(passengers['Age'].dropna(), bins=40)
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+plt.title('Distribution of Age')
 
 # age groups
 ageGroups = ['children', 'adolescents', 'adults', \
@@ -98,8 +126,6 @@ passengers.loc[:,'Age'].apply(ageGroup)
 ```
 
 
-![png](output_8_0.png)
-
 
 From the pie chart below, most of the passengers are adults and middle aged adults, a small portion of the passengers are children and very old. It should be noted that *20%* of the passengers have unknown age, these entries will be reoved from the analysis.
 
@@ -115,10 +141,8 @@ fract_passengers_by_age_group = \
 
 # plot a pie chart
 explode = (0, 0, 0, 0, 0, 0.1) 
-plt.figure(figsize=(12,6))
 plt.axis('equal')
-plt.title('Passengers aboard the Titanic by Age Group', \
-          fontsize=14)
+plt.title('Passengers aboard the Titanic by Age Group')
 patches, texts, autotexts = \
     plt.pie(fract_passengers_by_age_group['Percentage'], \
             labels=ageGroups, \
@@ -126,8 +150,6 @@ patches, texts, autotexts = \
             autopct="%1.1f%%", \
             shadow=True, \
            startangle=90)
-plt.setp(autotexts, fontsize=14, color='white')
-plt.setp(texts, fontsize=14)
 
 # backup the original data
 passengers_orig = passengers.copy()
@@ -135,8 +157,6 @@ passengers_orig = passengers.copy()
 passengers = passengers.dropna()
 ```
 
-
-![png](output_10_0.png)
 
 
 ### Separating the survivors from non-survivors 
@@ -173,12 +193,6 @@ def survivalRate(df1, df2, filter=""):
     return (getCount(df1,filter)/getCount(df2,filter)*100) \
         .reset_index(name="SurvivalRate")
 
-# import the required modules
-%matplotlib inline
-import matplotlib.pyplot as plt
-from matplotlib import gridspec
-import seaborn as sns
-
 # age groups
 ageGroups = ['children', 'adolescents', \
              'adults', 'middleaged', 'old']
@@ -187,7 +201,7 @@ factors = ['Sex', 'Pclass', 'AgeGroup']
 labels = ['Gender', 'Class', 'Age Group']
 
 #fig, axs = plt.subplots(1,3,figsize=(10,4))
-fig, axs = plt.subplots(1,3, figsize=(10,4), \
+fig, axs = plt.subplots(1,3, \
         gridspec_kw = {'width_ratios':[1, 1, 2]})
 for i, f in enumerate(factors):
     survival_rate = survivalRate(survivors, passengers, f)
@@ -204,12 +218,10 @@ axs.flat[0].set_ylabel('Survival Rate')
 
 
 
-    <matplotlib.text.Text at 0x1424b410>
+    <matplotlib.text.Text at 0x12a74250>
 
 
 
-
-![png](output_14_1.png)
 
 
 Considering all three factors, it can be observed that older male passengers on the second class have the most casualties.
@@ -231,12 +243,10 @@ sns.factorplot(x='AgeGroup', y='SurvivalRate', \
 
 
 
-    <seaborn.axisgrid.FacetGrid at 0x140b5650>
+    <seaborn.axisgrid.FacetGrid at 0x13371290>
 
 
 
-
-![png](output_16_1.png)
 
 
 ## Conclusion
